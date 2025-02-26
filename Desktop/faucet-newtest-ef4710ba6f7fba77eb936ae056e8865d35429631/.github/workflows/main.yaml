@@ -1,0 +1,125 @@
+name: Deployment Strategy
+
+on:
+  push:
+    branches:
+      - release/PROD
+
+jobs:
+
+  pre-deploy-build:
+    runs-on: ubuntu-latest
+    environment: AWS PROD
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Node.js version
+        id: node-version
+        run: |
+          node_version_range=$(jq -r '.engines.node' package.json)
+          min_node_version=$(echo $node_version_range | sed -n 's/>=\([^ ]*\) .*/\1/p')
+          echo "node_version=$min_node_version" >> $GITHUB_OUTPUT
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.node_version }}
+          cache: 'npm'
+
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+        name: List the state of node modules
+        continue-on-error: true
+        run: npm list
+      
+      - name: Install dependencies
+        run: npm ci
+        env: 
+          HUSKY: 0
+
+      - name: Run Lint
+        run: |
+          npm run lint
+            
+
+  deploy:
+    name: Push to ECR & Deploy to Apprunner - AWS PROD
+    runs-on: ubuntu-latest
+    needs: [ pre-deploy-build]
+    environment: AWS PROD
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        mask-password: 'true'
+          
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+    
+    - name: Get secrets From AWS 
+      uses: aws-actions/aws-secretsmanager-get-secrets@v1
+      id: get-secret
+      with:
+        secret-ids: |
+          SECRETS_JSON,${{ vars.AWS_SECRET_ID}}
+
+    - name: Tag, and Push the Image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO }}
+        IMAGE_TAG: ${{ github.sha }}
+        HUSKY: 0
+      run: |
+        for key in $(echo $SECRETS_JSON | jq -r 'keys[]'); do
+          value=$(echo $SECRETS_JSON | jq -r --arg key "$key" '.[$key]')
+          echo "$key=\"$value\"" >> .env
+        done
+        docker buildx create --use
+        docker buildx build --push --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        rm .env
+
+    - name: Deploy to App Runner Image
+      id: deploy-apprunner
+      uses: awslabs/amazon-app-runner-deploy@main
+      with:
+        service: ${{ secrets.AWS_APPRUNNER_SERVICE }}
+        image: ${{ steps.build-image.outputs.image }}
+        region: ${{ secrets.AWS_REGION }}
+        wait-for-service-stability-seconds: 1200
+        port: ${{ secrets.AWS_APPRUNNER_PORT }}
+        access-role-arn: ${{ secrets.AWS_ARN }}
+        cpu: ${{ secrets.AWS_APPRUNNER_CPU }}
+        memory: ${{ secrets.AWS_APPRUNNER_MEMORY }}
