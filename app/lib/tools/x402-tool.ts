@@ -7,41 +7,67 @@ import type { Tool } from './types';
 
 export const X402_CONTEXT = `
 ═══════════════════════════════════════════════════════════════════════════════
-💰 x402 PAYMENTS PROTOCOL INTEGRATION
+💰 x402 PAYMENTS PROTOCOL INTEGRATION - ALWAYS USE WHEN BUILDING PAID APIS/SERVICES
 ═══════════════════════════════════════════════════════════════════════════════
 
-When building web applications or APIs, integrate x402 payments protocol for instant digital payments.
+CRITICAL: When this tool is enabled, you MUST integrate x402 payment protocol into any API, service, or application being built.
 
 ## Overview
 x402: "1 line of code to accept digital dollars. No fee, 2 second settlement, $0.001 minimum payment."
 
-## Quick Integration (Express/Node.js)
+Philosophy: Payments on the internet are fundamentally flawed. Credit Cards are high friction, hard to accept, 
+have minimum payments that are far too high, and don't fit into the programmatic nature of the internet. 
+It's time for an open, internet-native form of payments. A payment rail that doesn't have high minimums + % based fee. 
+Payments that are amazing for humans and AI agents.
 
-\`\`\`typescript
-import { paymentMiddleware } from '@x402/node';
+## Principles
+- Open standard: x402 will never force reliance on a single party
+- HTTP Native: Seamlessly complements existing HTTP requests, no additional requests needed
+- Chain and token agnostic: Supports multiple chains and signing standards
+- Trust minimizing: Facilitators/servers cannot move funds outside client intentions
+- Easy to use: 10x better than existing payments, abstracting crypto complexity
 
-app.use(
-  paymentMiddleware("0xYourAddress", { 
-    "/api/premium": "$0.01",
-    "/api/query": "$0.001"
-  })
-);
+## REQUIRED DEPENDENCIES
 
-// That's it! Your endpoints now require payment
+⚠️ MANDATORY: When creating ANY project with x402 enabled, you MUST add these to package.json:
+
+For Server-side (Express, Next.js API, Node.js):
+\`\`\`json
+{
+  "dependencies": {
+    "@x402/node": "latest",
+    "express": "^4.18.0"
+  }
+}
 \`\`\`
 
-## Key Features
-- **No fees**: Unlike credit cards (2-3%), x402 has no percentage-based fees
-- **Instant settlement**: 2 second settlement time
-- **Micro-payments**: $0.001 minimum payment (1/10th of a cent)
-- **HTTP native**: Uses standard 402 Payment Required status code
-- **Gasless**: No gas fees for client or server
-- **Chain agnostic**: Works on multiple blockchains
+For Client-side applications:
+\`\`\`json
+{
+  "dependencies": {
+    "@x402/client": "latest"
+  }
+}
+\`\`\`
+
+For Browser applications:
+\`\`\`json
+{
+  "dependencies": {
+    "@x402/browser": "latest"
+  }
+}
+\`\`\`
+
+ALWAYS include @x402/node in server package.json when building APIs or backends.
+ALWAYS include @x402/client when building client applications that consume paid APIs.
 
 ## Installation
 
 \`\`\`bash
 npm install @x402/node @x402/client
+# or
+pnpm add @x402/node @x402/client
 \`\`\`
 
 ## Server Implementation
@@ -117,27 +143,122 @@ const data = await x402fetch('/api/premium');
 
 ## Protocol Flow
 
-1. **Initial Request**: Client requests resource without payment
-2. **402 Response**: Server returns \`402 Payment Required\` with payment details
-3. **Payment Header**: Client adds \`X-PAYMENT\` header with payment proof
-4. **Verification**: Server verifies payment (locally or via facilitator)
-5. **Settlement**: Payment settles on-chain (async, non-blocking)
-6. **Response**: Server returns resource with \`X-PAYMENT-RESPONSE\` header
+1. Client makes HTTP request to resource server
+2. Server responds with 402 Payment Required + Payment Required Response JSON
+3. Client selects paymentRequirements and creates Payment Payload
+4. Client sends HTTP request with X-PAYMENT header containing Payment Payload
+5. Server verifies Payment Payload (locally or via facilitator /verify endpoint)
+6. Facilitator performs verification and returns Verification Response
+7. If valid, server fulfills request; if invalid, returns 402
+8. Server settles payment (directly or via facilitator /settle endpoint)
+9. Facilitator submits payment to blockchain
+10. Facilitator waits for blockchain confirmation
+11. Facilitator returns Payment Execution Response
+12. Server returns 200 OK with resource + X-PAYMENT-RESPONSE header
+
+## Key Features
+- **No fees**: Unlike credit cards (2-3%), x402 has no percentage-based fees
+- **Instant settlement**: 2 second settlement time
+- **Micro-payments**: $0.001 minimum payment (1/10th of a cent)
+- **HTTP native**: Uses standard 402 Payment Required status code
+- **Gasless**: No gas fees for client or server
+- **Chain agnostic**: Works on multiple blockchains
 
 ## Payment Requirements Schema
 
 \`\`\`typescript
 interface PaymentRequirements {
   scheme: 'exact' | 'upto';           // Payment type
-  network: 'base' | 'ethereum' | 'arbitrum';
+  network: string;                     // Blockchain network
   maxAmountRequired: string;           // In atomic units (wei)
   resource: string;                    // URL path
   description: string;
+  mimeType: string;
+  outputSchema?: object | null;
   payTo: string;                       // Recipient address
   asset: string;                       // Token contract address (USDC, etc)
   maxTimeoutSeconds: number;
+  extra: object | null;                // Scheme-specific data
 }
 \`\`\`
+
+## Payment Payload (X-PAYMENT header)
+
+\`\`\`typescript
+{
+  x402Version: number;
+  scheme: string;
+  network: string;
+  payload: <scheme dependent>;
+}
+\`\`\`
+
+## Facilitator Interface
+
+### POST /verify
+Verify a payment with supported scheme and network:
+
+Request:
+\`\`\`typescript
+{
+  x402Version: number;
+  paymentHeader: string;
+  paymentRequirements: PaymentRequirements;
+}
+\`\`\`
+
+Response:
+\`\`\`typescript
+{
+  isValid: boolean;
+  invalidReason: string | null;
+}
+\`\`\`
+
+### POST /settle
+Settle a payment:
+
+Request:
+\`\`\`typescript
+{
+  x402Version: number;
+  paymentHeader: string;
+  paymentRequirements: PaymentRequirements;
+}
+\`\`\`
+
+Response:
+\`\`\`typescript
+{
+  success: boolean;
+  error: string | null;
+  txHash: string | null;
+  networkId: string | null;
+}
+\`\`\`
+
+### GET /supported
+Get supported payment schemes and networks:
+
+Response:
+\`\`\`typescript
+{
+  kinds: [
+    {
+      "scheme": string,
+      "network": string,
+    }
+  ]
+}
+\`\`\`
+
+## Schemes
+
+A scheme is a logical way of moving money:
+- **exact**: Fixed amount payment (e.g., $0.01 for article)
+- **upto**: Variable payment up to max (e.g., LLM tokens consumed)
+
+Each (scheme, network) pair must be explicitly supported by clients and facilitators.
 
 ## Environment Setup
 
@@ -153,7 +274,7 @@ X402_NETWORK=base-sepolia
 
 ## Common Use Cases
 
-### 1. AI API with Per-Token Pricing
+### 1. AI API with Per-Request Pricing
 \`\`\`typescript
 app.use(paymentMiddleware("0xAddress", {
   "/ai/chat": "$0.001"  // $0.001 per request
@@ -174,35 +295,12 @@ app.use(paymentMiddleware("0xAddress", {
 }));
 \`\`\`
 
-## Verification & Settlement
-
-### Local Verification (Fast)
-\`\`\`typescript
-import { verifyPayment } from '@x402/verify';
-
-const isValid = await verifyPayment(paymentHeader, requirements);
-\`\`\`
-
-### Facilitator Service (Recommended)
-\`\`\`typescript
-// Facilitator handles verification + settlement
-// POST /verify - Verify payment signature
-// POST /settle - Execute on-chain transaction
-// GET /supported - Get supported chains/schemes
-
-const facilitator = 'https://facilitator.x402.org';
-\`\`\`
-
 ## Supported Networks
 - Base (Mainnet & Sepolia)
 - Ethereum
 - Arbitrum
 - Polygon
 - More coming...
-
-## Supported Schemes
-- \`exact\`: Fixed amount payment (e.g., $0.01 for article)
-- \`upto\`: Variable payment up to max (e.g., LLM tokens consumed)
 
 ## Best Practices
 
@@ -212,13 +310,31 @@ const facilitator = 'https://facilitator.x402.org';
 4. **Error Handling**: Handle insufficient funds gracefully
 5. **Receipt Storage**: Log payment responses for reconciliation
 
+## Running Example (base-sepolia)
+
+From examples/typescript:
+1. \`pnpm install && pnpm build\`
+2. Select server (e.g., express), add WALLET_ADDRESS to .env
+3. \`pnpm dev\` in server directory
+4. Select client (e.g., axios), add PRIVATE_KEY to .env
+5. \`pnpm dev\` in client directory
+6. See weather report with automatic payment!
+
 ## Links
 - Documentation: https://github.com/Meteor-Wallet/x402_protocol
 - Facilitator Service: https://facilitator.x402.org
 - Testnet Faucet: https://faucet.quicknode.com/base/sepolia
 
 ═══════════════════════════════════════════════════════════════════════════════
-⚡ When building APIs or paid services, integrate x402 for instant payments!
+⚡ CRITICAL REMINDERS FOR x402 INTEGRATION:
+
+1. ALWAYS add @x402/node to package.json dependencies when building server/API
+2. ALWAYS add @x402/client to package.json when building client applications
+3. ALWAYS show x402 paymentMiddleware in code examples for paid APIs
+4. ALWAYS include installation/setup instructions in generated code
+5. DEFAULT to using x402 for ANY paid service, API endpoint, or premium feature
+
+When x402 tool is enabled, treat ALL APIs and services as paid by default unless explicitly told otherwise.
 ═══════════════════════════════════════════════════════════════════════════════
 `;
 

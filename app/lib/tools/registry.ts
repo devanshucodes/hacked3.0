@@ -63,7 +63,13 @@ export function getEnabledTools(enabledIds: string[]): Tool[] {
 
 export function getToolsContext(enabledIds: string[]): string {
   const enabledTools = getEnabledTools(enabledIds);
-  return enabledTools
+  console.log('🔧 Getting tools context for:', enabledIds);
+  console.log('🔧 Found tools:', enabledTools.map(t => t.id));
+  
+  const context = enabledTools
     .map(tool => tool.contextPrompt)
     .join('\n\n');
+  
+  console.log('🔧 Total context length:', context.length);
+  return context;
 }

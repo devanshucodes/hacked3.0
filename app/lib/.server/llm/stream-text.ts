@@ -158,6 +158,9 @@ export async function streamText(props: {
 }) {
   const { messages, env: serverEnv, options, apiKeys, files, providerSettings, promptId, contextOptimization, enabledTools = ['aptos'] } = props;
 
+  // Log enabled tools for debugging
+  logger.debug('Enabled tools:', enabledTools);
+
   // console.log({serverEnv});
 
   let currentModel = DEFAULT_MODEL;
