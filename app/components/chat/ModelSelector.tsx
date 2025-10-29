@@ -33,9 +33,7 @@ export const ModelSelector = ({
       const firstEnabledProvider = providerList[0];
       setProvider?.(firstEnabledProvider);
 
-      const firstModel = modelList.find(
-        (m) => m.provider === firstEnabledProvider.name,
-      );
+      const firstModel = modelList.find((m) => m.provider === firstEnabledProvider.name);
 
       if (firstModel) {
         setModel?.(firstModel.name);
@@ -47,34 +45,25 @@ export const ModelSelector = ({
     return (
       <div className="mb-2 p-4 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary">
         <p className="text-center">
-          No providers are currently enabled. Please enable at least one
-          provider in the settings to start using the chat.
+          No providers are currently enabled. Please enable at least one provider in the settings to start using the
+          chat.
         </p>
       </div>
     );
   }
 
   return (
-    <div
-      className={classNames(
-        'mb-2 flex gap-2 flex-col sm:flex-row',
-        styles.modelSelector,
-      )}
-    >
+    <div className={classNames('mb-2 flex gap-2 flex-col sm:flex-row', styles.modelSelector)}>
       <select
         value={provider?.name ?? ''}
         onChange={(e) => {
-          const newProvider = providerList.find(
-            (p: ProviderInfo) => p.name === e.target.value,
-          );
+          const newProvider = providerList.find((p: ProviderInfo) => p.name === e.target.value);
 
           if (newProvider && setProvider) {
             setProvider(newProvider);
           }
 
-          const firstModel = [...modelList].find(
-            (m) => m.provider === e.target.value,
-          );
+          const firstModel = [...modelList].find((m) => m.provider === e.target.value);
 
           if (firstModel && setModel) {
             setModel(firstModel.name);

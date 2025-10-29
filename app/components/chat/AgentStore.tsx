@@ -18,14 +18,10 @@ interface AgentStoreProps {
   onAgentDelete: (agentId: string) => void;
 }
 
-export const AgentStore: React.FC<AgentStoreProps> = ({
-  isOpen,
-  onClose,
-  agents,
-  onAgentSelect,
-  onAgentDelete,
-}) => {
-  if (!isOpen) return null;
+export const AgentStore: React.FC<AgentStoreProps> = ({ isOpen, onClose, agents, onAgentSelect, onAgentDelete }) => {
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -39,7 +35,7 @@ export const AgentStore: React.FC<AgentStoreProps> = ({
             <div className="i-ph:x text-xl" />
           </button>
         </div>
-        
+
         {agents.length === 0 ? (
           <div className="text-center text-bolt-elements-textSecondary py-8">
             No saved agents yet. Create a project and save it as an agent!
@@ -77,4 +73,4 @@ export const AgentStore: React.FC<AgentStoreProps> = ({
       </div>
     </div>
   );
-}; 
+};

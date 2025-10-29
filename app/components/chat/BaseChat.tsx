@@ -100,27 +100,19 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-    const [apiKeys, setApiKeys] = useState<Record<string, string>>(
-      getApiKeysFromCookies(),
-    );
+    const [apiKeys, setApiKeys] = useState<Record<string, string>>(getApiKeysFromCookies());
     const [modelList, setModelList] = useState(MODEL_LIST);
-    const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] =
-      useState(false);
+    const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const [recognition, setRecognition] = useState<SpeechRecognition | null>(
-      null,
-    );
+    const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
     const [transcript, setTranscript] = useState('');
-    const [isModelLoading, setIsModelLoading] = useState<string | undefined>(
-      'all',
-    );
+    const [isModelLoading, setIsModelLoading] = useState<string | undefined>('all');
     const [selectedSDK, setSelectedSDK] = useState('Vercel'); // State for selected SDK
     const [isAgentStoreOpen, setIsAgentStoreOpen] = useState(false);
     const agents = useStore(agentsStore);
 
     const getProviderSettings = useCallback(() => {
-      let providerSettings: Record<string, IProviderSetting> | undefined =
-        undefined;
+      let providerSettings: Record<string, IProviderSetting> | undefined = undefined;
 
       try {
         const savedProviderSettings = Cookies.get('providers');
@@ -128,10 +120,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         if (savedProviderSettings) {
           const parsedProviderSettings = JSON.parse(savedProviderSettings);
 
-          if (
-            typeof parsedProviderSettings === 'object' &&
-            parsedProviderSettings !== null
-          ) {
+          if (typeof parsedProviderSettings === 'object' && parsedProviderSettings !== null) {
             providerSettings = parsedProviderSettings;
           }
         }
@@ -149,12 +138,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     }, [transcript]);
 
     useEffect(() => {
-      if (
-        typeof window !== 'undefined' &&
-        ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
-      ) {
-        const SpeechRecognition =
-          window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -217,9 +202,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       setApiKeys(newApiKeys);
       Cookies.set('apiKeys', JSON.stringify(newApiKeys));
 
-      const provider = LLMManager.getInstance(
-        import.meta.env || process.env || {},
-      ).getProvider(providerName);
+      const provider = LLMManager.getInstance(import.meta.env || process.env || {}).getProvider(providerName);
 
       if (provider && provider.getDynamicModels) {
         setIsModelLoading(providerName);
@@ -234,9 +217,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           );
 
           setModelList((preModels) => {
-            const filteredOutPreModels = preModels.filter(
-              (x) => x.provider !== providerName,
-            );
+            const filteredOutPreModels = preModels.filter((x) => x.provider !== providerName);
             return [...filteredOutPreModels, ...staticModels, ...dynamicModels];
           });
         } catch (error) {
@@ -335,10 +316,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const handleSaveAsAgent = () => {
       // Create a modal or prompt for name and description
       const name = prompt('Enter a name for this agent:');
-      if (!name) return;
-      
+
+      if (!name) {
+        return;
+      }
+
       const description = prompt('Enter a description for this agent:');
-      if (!description) return;
+
+      if (!description) {
+        return;
+      }
 
       try {
         saveAgent(name, description, messages || [], []); // You might want to save more project-specific data
@@ -365,473 +352,401 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const baseChat = (
       <div className="fixed inset-0 overflow-hidden">
-           <div
-                style={{
-                  height: '500px',
-                  width: '30%',
-                  position: 'fixed',
-                  left: '10px',
-                  top: '10px',
-                  zIndex: 1,
-                  backgroundImage: 'url(left.png)',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: 'contain',
-                }}
-              ></div>
-              <div
-                style={{
-                  height: '500px',
-                  width: '30%',
-                  position: 'fixed',
-                  right: '10px',
-                  top: '10px',
-                  zIndex: 1,
-                  backgroundImage: 'url(right.png)',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: 'contain',
-                }}
-              ></div>
-           
-      <div
-        ref={ref}
-        className={classNames(
-          styles.BaseChat,
-          'relative flex h-full w-full',
-        )}
-        data-chat-visible={showChat}
-      >
-        <ClientOnly>{() => <Menu />}</ClientOnly>
-       
         <div
-          ref={scrollRef}
-          className="flex flex-col lg:flex-row w-full h-full"
+          style={{
+            height: '500px',
+            width: '30%',
+            position: 'fixed',
+            left: '10px',
+            top: '10px',
+            zIndex: 1,
+            backgroundImage: 'url(left.png)',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'contain',
+          }}
+        ></div>
+        <div
+          style={{
+            height: '500px',
+            width: '30%',
+            position: 'fixed',
+            right: '10px',
+            top: '10px',
+            zIndex: 1,
+            backgroundImage: 'url(right.png)',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'contain',
+          }}
+        ></div>
+
+        <div
+          ref={ref}
+          className={classNames(styles.BaseChat, 'relative flex h-full w-full')}
+          data-chat-visible={showChat}
         >
-          
-          <div
-            className={classNames(
-              styles.Chat,
-              'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full overflow-y-auto',
-            )}
-          >
-           
-            {!chatStarted && (
-              <div
-                id="intro"
-                className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0"
-              >
-                <h1 className="text-3xl lg:text-6xl font-bold text-bolt-elements-textPrimary2 mb-4 animate-fade-in">
-                  Lets Start Building
-                </h1>
-                
-                <p className="text-md lg:text-xl mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200">
-                  Bring ideas to life in seconds or get help on existing
-                  projects.
-                </p>
-              </div>
-            )}
+          <ClientOnly>{() => <Menu />}</ClientOnly>
+
+          <div ref={scrollRef} className="flex flex-col lg:flex-row w-full h-full">
             <div
-              className={classNames('pt-6 px-2 sm:px-6', {
-                'h-full flex flex-col': chatStarted,
-              })}
+              className={classNames(
+                styles.Chat,
+                'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full overflow-y-auto',
+              )}
             >
-              <ClientOnly>
-                {() => {
-                  return chatStarted ? (
-                    <Messages
-                      ref={messageRef}
-                      className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
-                      messages={messages}
-                      isStreaming={isStreaming}
-                    />
-                  ) : null;
-                }}
-              </ClientOnly>
-              <div
-                className={classNames(
-                  'flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6',
-                  {
-                    'sticky bottom-2': chatStarted,
-                  },
-                )}
-              >
-                <div className="bg-bolt-elements-background-depth-2">
-                  {actionAlert && (
-                    <ChatAlert
-                      alert={actionAlert}
-                      clearAlert={() => clearAlert?.()}
-                      postMessage={(message) => {
-                        sendMessage?.({} as any, message);
-                        clearAlert?.();
-                      }}
-                    />
-                  )}
+              {!chatStarted && (
+                <div id="intro" className="mt-[16vh] max-w-chat mx-auto text-center px-4 lg:px-0">
+                  <h1 className="text-3xl lg:text-6xl font-bold text-bolt-elements-textPrimary2 mb-4 animate-fade-in">
+                    Lets Start Building
+                  </h1>
+
+                  <p className="text-md lg:text-xl mb-8 text-bolt-elements-textSecondary animate-fade-in animation-delay-200">
+                    Bring ideas to life in seconds or get help on existing projects.
+                  </p>
                 </div>
+              )}
+              <div
+                className={classNames('pt-6 px-2 sm:px-6', {
+                  'h-full flex flex-col': chatStarted,
+                })}
+              >
+                <ClientOnly>
+                  {() => {
+                    return chatStarted ? (
+                      <Messages
+                        ref={messageRef}
+                        className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
+                        messages={messages}
+                        isStreaming={isStreaming}
+                      />
+                    ) : null;
+                  }}
+                </ClientOnly>
                 <div
-                  id="textarea12"
-                  className={classNames(
-                    'bg-bolt-elements-background-depth-2 p-3 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
-                  )}
+                  className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6', {
+                    'sticky bottom-2': chatStarted,
+                  })}
                 >
-                  <svg className={classNames(styles.PromptEffectContainer)}>
-                    <defs>
-                      <linearGradient
-                        id="line-gradient"
-                        x1="20%"
-                        y1="0%"
-                        x2="-14%"
-                        y2="10%"
-                        gradientUnits="userSpaceOnUse"
-                        gradientTransform="rotate(-45)"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="#b44aff"
-                          stopOpacity="0%"
-                        ></stop>
-                        <stop
-                          offset="40%"
-                          stopColor="#b44aff"
-                          stopOpacity="80%"
-                        ></stop>
-                        <stop
-                          offset="50%"
-                          stopColor="#b44aff"
-                          stopOpacity="80%"
-                        ></stop>
-                        <stop
-                          offset="100%"
-                          stopColor="#b44aff"
-                          stopOpacity="0%"
-                        ></stop>
-                      </linearGradient>
-                      <linearGradient id="shine-gradient">
-                        <stop
-                          offset="0%"
-                          stopColor="white"
-                          stopOpacity="0%"
-                        ></stop>
-                        <stop
-                          offset="40%"
-                          stopColor="#ffffff"
-                          stopOpacity="80%"
-                        ></stop>
-                        <stop
-                          offset="50%"
-                          stopColor="#ffffff"
-                          stopOpacity="80%"
-                        ></stop>
-                        <stop
-                          offset="100%"
-                          stopColor="white"
-                          stopOpacity="0%"
-                        ></stop>
-                      </linearGradient>
-                    </defs>
-                    <rect
-                      className={classNames(styles.PromptEffectLine)}
-                      pathLength="100"
-                      strokeLinecap="round"
-                    ></rect>
-                    <rect
-                      className={classNames(styles.PromptShine)}
-                      x="48"
-                      y="24"
-                      width="70"
-                      height="1"
-                    ></rect>
-                  </svg>
+                  <div className="bg-bolt-elements-background-depth-2">
+                    {actionAlert && (
+                      <ChatAlert
+                        alert={actionAlert}
+                        clearAlert={() => clearAlert?.()}
+                        postMessage={(message) => {
+                          sendMessage?.({} as any, message);
+                          clearAlert?.();
+                        }}
+                      />
+                    )}
+                  </div>
                   <div
+                    id="textarea12"
                     className={classNames(
-                      ' bg-[#f0f5f9] relative shadow-xs border border-bolt-elements-borderColor backdrop-blur rounded-lg',
+                      'bg-bolt-elements-background-depth-2 p-3 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
                     )}
                   >
-                    <textarea
-                      ref={textareaRef}
+                    <svg className={classNames(styles.PromptEffectContainer)}>
+                      <defs>
+                        <linearGradient
+                          id="line-gradient"
+                          x1="20%"
+                          y1="0%"
+                          x2="-14%"
+                          y2="10%"
+                          gradientUnits="userSpaceOnUse"
+                          gradientTransform="rotate(-45)"
+                        >
+                          <stop offset="0%" stopColor="#b44aff" stopOpacity="0%"></stop>
+                          <stop offset="40%" stopColor="#b44aff" stopOpacity="80%"></stop>
+                          <stop offset="50%" stopColor="#b44aff" stopOpacity="80%"></stop>
+                          <stop offset="100%" stopColor="#b44aff" stopOpacity="0%"></stop>
+                        </linearGradient>
+                        <linearGradient id="shine-gradient">
+                          <stop offset="0%" stopColor="white" stopOpacity="0%"></stop>
+                          <stop offset="40%" stopColor="#ffffff" stopOpacity="80%"></stop>
+                          <stop offset="50%" stopColor="#ffffff" stopOpacity="80%"></stop>
+                          <stop offset="100%" stopColor="white" stopOpacity="0%"></stop>
+                        </linearGradient>
+                      </defs>
+                      <rect
+                        className={classNames(styles.PromptEffectLine)}
+                        pathLength="100"
+                        strokeLinecap="round"
+                      ></rect>
+                      <rect className={classNames(styles.PromptShine)} x="48" y="24" width="70" height="1"></rect>
+                    </svg>
+                    <div
                       className={classNames(
-                        'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-text-textTertiary bg-transparent text-sm',
-                        'transition-all duration-200',
-                        'hover:border-bolt-elements-focus',
+                        ' bg-[#f0f5f9] relative shadow-xs border border-bolt-elements-borderColor backdrop-blur rounded-lg',
                       )}
-                      onDragEnter={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.style.border = '2px solid #1488fc';
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.style.border = '2px solid #1488fc';
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.style.border =
-                          '1px solid var(--bolt-elements-borderColor)';
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.style.border =
-                          '1px solid var(--bolt-elements-borderColor)';
+                    >
+                      <textarea
+                        ref={textareaRef}
+                        className={classNames(
+                          'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-text-textTertiary bg-transparent text-sm',
+                          'transition-all duration-200',
+                          'hover:border-bolt-elements-focus',
+                        )}
+                        onDragEnter={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.style.border = '2px solid #1488fc';
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.style.border = '2px solid #1488fc';
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
 
-                        const files = Array.from(e.dataTransfer.files);
-                        files.forEach((file) => {
-                          if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
+                          const files = Array.from(e.dataTransfer.files);
+                          files.forEach((file) => {
+                            if (file.type.startsWith('image/')) {
+                              const reader = new FileReader();
 
-                            reader.onload = (e) => {
-                              const base64Image = e.target?.result as string;
-                              setUploadedFiles?.([...uploadedFiles, file]);
-                              setImageDataList?.([...imageDataList, base64Image]);
-                            };
-                            reader.readAsDataURL(file);
+                              reader.onload = (e) => {
+                                const base64Image = e.target?.result as string;
+                                setUploadedFiles?.([...uploadedFiles, file]);
+                                setImageDataList?.([...imageDataList, base64Image]);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          });
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            if (event.shiftKey) {
+                              return;
+                            }
+
+                            event.preventDefault();
+
+                            if (isStreaming) {
+                              handleStop?.();
+                              return;
+                            }
+
+                            // ignore if using input method engine
+                            if (event.nativeEvent.isComposing) {
+                              return;
+                            }
+
+                            handleSendMessage?.(event);
                           }
-                        });
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          if (event.shiftKey) {
-                            return;
-                          }
+                        }}
+                        value={input}
+                        onChange={(event) => {
+                          handleInputChange?.(event);
+                        }}
+                        onPaste={handlePaste}
+                        style={{
+                          minHeight: TEXTAREA_MIN_HEIGHT,
+                          maxHeight: TEXTAREA_MAX_HEIGHT,
+                        }}
+                        placeholder="How can Cookie help you today?"
+                        translate="no"
+                      />
 
-                          event.preventDefault();
+                      <div className="flex justify-between items-center text-sm p-4 pt-2">
+                        <div className="flex gap-1 items-center">
+                          <div>
+                            <IconButton
+                              title="Enhance prompt"
+                              disabled={input.length === 0 || enhancingPrompt}
+                              className={classNames(
+                                'transition-all',
+                                'bg-white', // White background
+                                'rounded-md', // Rounded corners
+                                'px-4 py-2', // Padding
+                                'text-blue-900', // Blue text color (adjust if needed)
+                                'font-bold', // Bold text
+                                'shadow-md', // Subtle drop shadow
+                                enhancingPrompt ? 'opacity-100' : '',
+                              )}
+                              onClick={() => {
+                                enhancePrompt?.();
+                                toast.success('Prompt enhanced!');
+                              }}
+                            >
+                              <div className="i-bolt:stars text-l text-blue-500 mr-1" />
+                              <span className=" text-l text-blue-500 mr-1">Enhance Prompt</span>
+                            </IconButton>
+                          </div>
 
-                          if (isStreaming) {
-                            handleStop?.();
-                            return;
-                          }
-
-                          // ignore if using input method engine
-                          if (event.nativeEvent.isComposing) {
-                            return;
-                          }
-
-                          handleSendMessage?.(event);
-                        }
-                      }}
-                      value={input}
-                      onChange={(event) => {
-                        handleInputChange?.(event);
-                      }}
-                      onPaste={handlePaste}
-                      style={{
-                        minHeight: TEXTAREA_MIN_HEIGHT,
-                        maxHeight: TEXTAREA_MAX_HEIGHT,
-                      }}
-                      placeholder="How can Cookie help you today?"
-                      translate="no"
-                    />
-
-                    <div className="flex justify-between items-center text-sm p-4 pt-2">
-                      <div className="flex gap-1 items-center">
-                        <div>
-                          <IconButton
-                            title="Enhance prompt"
-                            disabled={input.length === 0 || enhancingPrompt}
+                          <div
                             className={classNames(
+                              'text-l text-blue-500 mr-1',
                               'transition-all',
                               'bg-white', // White background
                               'rounded-md', // Rounded corners
-                              'px-4 py-2', // Padding
-                              'text-blue-900', // Blue text color (adjust if needed)
-                              'font-bold', // Bold text
-                              'shadow-md', // Subtle drop shadow
-                              enhancingPrompt ? 'opacity-100' : '',
+                              'p-1', // Padding (adjust as needed)
+                              'hover:bg-gray-100', // Hover effect
                             )}
-                            onClick={() => {
-                              enhancePrompt?.();
-                              toast.success('Prompt enhanced!');
-                            }}
                           >
-                            <div className="i-bolt:stars text-l text-blue-500 mr-1" />
-                            <span className=" text-l text-blue-500 mr-1">
-                              Enhance Prompt
-                            </span>
-                          </IconButton>
+                            <SpeechRecognitionButton
+                              isListening={isListening}
+                              onStart={startListening}
+                              onStop={stopListening}
+                              disabled={isStreaming}
+                            />
+                          </div>
                         </div>
 
-                        <div
-                          className={classNames(
-                            'text-l text-blue-500 mr-1',
-                            'transition-all',
-                            'bg-white', // White background
-                            'rounded-md', // Rounded corners
-                            'p-1', // Padding (adjust as needed)
-                            'hover:bg-gray-100', // Hover effect
+                        <ClientOnly>
+                          {() => (
+                            <SendButton
+                              isStreaming={isStreaming}
+                              disabled={!providerList || providerList.length === 0}
+                              onClick={(event) => {
+                                if (isStreaming) {
+                                  handleStop?.();
+                                  return;
+                                }
+
+                                if (input.length > 0 || uploadedFiles.length > 0) {
+                                  handleSendMessage?.(event);
+                                }
+                              }}
+                              className={styles.sendButton}
+                            />
                           )}
-                        >
-                          <SpeechRecognitionButton
-                            isListening={isListening}
-                            onStart={startListening}
-                            onStop={stopListening}
-                            disabled={isStreaming}
-                          />
-                        </div>
+                        </ClientOnly>
+
+                        {/* Smaller text for "Use Shift + Return..." */}
+                        {input.length > 3 && (
+                          <div
+                            className={classNames('text-xs text-bolt-elements-textTertiary', styles.shiftReturnText)}
+                          >
+                            Use{' '}
+                            <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Shift</kbd> +{' '}
+                            <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Return</kbd>{' '}
+                            a new line
+                          </div>
+                        )}
                       </div>
-
-                      <ClientOnly>
-                        {() => (
-                          <SendButton
-                            isStreaming={isStreaming}
-                            disabled={!providerList || providerList.length === 0}
-                            onClick={(event) => {
-                              if (isStreaming) {
-                                handleStop?.();
-                                return;
-                              }
-
-                              if (
-                                input.length > 0 ||
-                                uploadedFiles.length > 0
-                              ) {
-                                handleSendMessage?.(event);
-                              }
-                            }}
-                            className={styles.sendButton}
-                          />
-                        )}
-                      </ClientOnly>
-
-                      {/* Smaller text for "Use Shift + Return..." */}
-                      {input.length > 3 && (
-                        <div className={classNames('text-xs text-bolt-elements-textTertiary', styles.shiftReturnText)}>
-                          Use{' '}
-                          <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">
-                            Shift
-                          </kbd>{' '}
-                          +{' '}
-                          <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">
-                            Return
-                          </kbd>{' '}
-                          a new line
-                        </div>
-                      )}
                     </div>
-                  </div>
-                  <br></br>
-                  <div className={classNames(isModelSettingsCollapsed ? 'hidden' : '')}>
-                    <div
+                    <br></br>
+                    <div className={classNames(isModelSettingsCollapsed ? 'hidden' : '')}>
+                      <div
                         className={classNames(
-                        'flex items-center justify-between w-full bg-white px-3 py-2 rounded-md',
-                        isModelSettingsCollapsed ? 'hidden' : '',
+                          'flex items-center justify-between w-full bg-white px-3 py-2 rounded-md',
+                          isModelSettingsCollapsed ? 'hidden' : '',
                         )}
-                    >
+                      >
                         <div className="flex items-center gap-2">
-                        <div className="flex flex-col gap-1 w-[130px] sm:w-auto">
+                          <div className="flex flex-col gap-1 w-[130px] sm:w-auto">
                             <span className="text-xs text-gray-500">LLM</span>
                             <ModelSelector
-                            key={provider?.name + ':' + modelList.length}
-                            model={model}
-                            setModel={setModel}
-                            modelList={modelList}
-                            provider={provider}
-                            setProvider={setProvider}
-                            providerList={providerList || (PROVIDER_LIST as ProviderInfo[])}
-                            apiKeys={apiKeys}
-                            modelLoading={isModelLoading}
+                              key={provider?.name + ':' + modelList.length}
+                              model={model}
+                              setModel={setModel}
+                              modelList={modelList}
+                              provider={provider}
+                              setProvider={setProvider}
+                              providerList={providerList || (PROVIDER_LIST as ProviderInfo[])}
+                              apiKeys={apiKeys}
+                              modelLoading={isModelLoading}
                             />
-                        </div>
-                        <div className="flex flex-col gap-1 w-[130px] sm:w-auto">
+                          </div>
+                          <div className="flex flex-col gap-1 w-[130px] sm:w-auto">
                             <span className="text-xs text-gray-500">Framework</span>
                             <select
-                            value={selectedSDK}
-                            onChange={(e) => setSelectedSDK(e.target.value)}
-                            className="px-3 py-2 rounded-md border-2 border-gray-500 text-xs w-full text-black"
+                              value={selectedSDK}
+                              onChange={(e) => setSelectedSDK(e.target.value)}
+                              className="px-3 py-2 rounded-md border-2 border-gray-500 text-xs w-full text-black"
                             >
-                            <option value="Vercel">Vercel AI SDK Core</option>
-                            {/* Add more options for other SDKs as needed */}
+                              <option value="Vercel">Vercel AI SDK Core</option>
+                              {/* Add more options for other SDKs as needed */}
                             </select>
-                        </div>
-                        <div className="flex flex-col gap-1 w-[90px] sm:w-auto">
+                          </div>
+                          <div className="flex flex-col gap-1 w-[90px] sm:w-auto">
                             <span className="text-xs text-gray-500">Add Tools</span>
                             <button className="px-3 py-2 rounded-md border-2 border-gray-500 text-xs w-full text-black">
-                            +
+                              +
                             </button>
-                        </div>
+                          </div>
                         </div>
                         {/* Removed the Templates section */}
+                      </div>
+                      <div className="mt-2">
+                        {(providerList || []).length > 0 && provider && (
+                          <APIKeyManager
+                            provider={provider}
+                            apiKey={apiKeys[provider.name] || ''}
+                            setApiKey={(key) => {
+                              onApiKeysChange(provider.name, key);
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                     <div className="mt-2">
-                        {(providerList || []).length > 0 && provider && (
-                        <APIKeyManager
-                        provider={provider}
-                        apiKey={apiKeys[provider.name] || ''}
-                        setApiKey={(key) => {
-                            onApiKeysChange(provider.name, key);
-                        }}
-                        />
-                    )}
-                    </div>
-                </div>
-                <div className="mt-2">
-                    <FilePreview
+                      <FilePreview
                         files={uploadedFiles}
                         imageDataList={imageDataList}
                         onRemove={(index) => {
-                            setUploadedFiles?.(
-                            uploadedFiles.filter((_, i) => i !== index),
-                            );
-                            setImageDataList?.(
-                            imageDataList.filter((_, i) => i !== index),
-                            );
+                          setUploadedFiles?.(uploadedFiles.filter((_, i) => i !== index));
+                          setImageDataList?.(imageDataList.filter((_, i) => i !== index));
                         }}
-                    />
-                </div>
-
-                  <ClientOnly>
-                    {() => (
-                      <ScreenshotStateManager
-                        setUploadedFiles={setUploadedFiles}
-                        setImageDataList={setImageDataList}
-                        uploadedFiles={uploadedFiles}
-                        imageDataList={imageDataList}
                       />
-                    )}
-                  </ClientOnly>
+                    </div>
+
+                    <ClientOnly>
+                      {() => (
+                        <ScreenshotStateManager
+                          setUploadedFiles={setUploadedFiles}
+                          setImageDataList={setImageDataList}
+                          uploadedFiles={uploadedFiles}
+                          imageDataList={imageDataList}
+                        />
+                      )}
+                    </ClientOnly>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-col justify-center gap-5">
-              {!chatStarted && (
-                <div className="flex justify-center gap-2">
-                  {ImportButtons(importChat)}
-                  <GitCloneButton importChat={importChat} />
-                </div>
-              )}
-              {!chatStarted &&
-                ExamplePrompts((event, messageInput) => {
-                  if (isStreaming) {
-                    handleStop?.();
-                    return;
-                  }
+              <div className="flex flex-col justify-center gap-5">
+                {!chatStarted && (
+                  <div className="flex justify-center gap-2">
+                    {ImportButtons(importChat)}
+                    <GitCloneButton importChat={importChat} />
+                  </div>
+                )}
+                {!chatStarted &&
+                  ExamplePrompts((event, messageInput) => {
+                    if (isStreaming) {
+                      handleStop?.();
+                      return;
+                    }
 
-                  handleSendMessage?.(event, messageInput);
-                })}
-              {!chatStarted && <StarterTemplates />}
+                    handleSendMessage?.(event, messageInput);
+                  })}
+                {!chatStarted && <StarterTemplates />}
+              </div>
             </div>
+            <ClientOnly>{() => <Workbench chatStarted={chatStarted} isStreaming={isStreaming} />}</ClientOnly>
           </div>
-          <ClientOnly>
-            {() => (
-              <Workbench
-                chatStarted={chatStarted}
-                isStreaming={isStreaming}
-              />
-            )}
-          </ClientOnly>
         </div>
       </div>
-     </div>
     );
 
-    return <Tooltip.Provider delayDuration={200}>
-      {baseChat}
-      <AgentStore
-        isOpen={isAgentStoreOpen}
-        onClose={() => setIsAgentStoreOpen(false)}
-        agents={agents}
-        onAgentSelect={handleAgentSelect}
-        onAgentDelete={handleAgentDelete}
-      />
-    </Tooltip.Provider>;
+    return (
+      <Tooltip.Provider delayDuration={200}>
+        {baseChat}
+        <AgentStore
+          isOpen={isAgentStoreOpen}
+          onClose={() => setIsAgentStoreOpen(false)}
+          agents={agents}
+          onAgentSelect={handleAgentSelect}
+          onAgentDelete={handleAgentDelete}
+        />
+      </Tooltip.Provider>
+    );
   },
 );
 
-export default BaseChat
+export default BaseChat;

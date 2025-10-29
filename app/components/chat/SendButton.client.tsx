@@ -11,12 +11,7 @@ interface SendButtonProps {
 
 const customEasingFn = cubicBezier(0.4, 0, 0.2, 1);
 
-export const SendButton = ({
-  isStreaming,
-  disabled,
-  onClick,
-  className,
-}: SendButtonProps) => {
+export const SendButton = ({ isStreaming, disabled, onClick, className }: SendButtonProps) => {
   return (
     <motion.button
       className={classNames(
@@ -36,11 +31,7 @@ export const SendButton = ({
     >
       <div className="text-lg flex items-center gap-x-1">
         {!isStreaming && <span>Create</span>}
-        {!isStreaming ? (
-          <div className="i-ph:arrow-right" />
-        ) : (
-          <div className="i-ph:stop-circle-bold" />
-        )}
+        {!isStreaming ? <div className="i-ph:arrow-right" /> : <div className="i-ph:stop-circle-bold" />}
       </div>
     </motion.button>
   );
