@@ -154,8 +154,9 @@ export async function streamText(props: {
   providerSettings?: Record<string, IProviderSetting>;
   promptId?: string;
   contextOptimization?: boolean;
+  enabledTools?: string[];
 }) {
-  const { messages, env: serverEnv, options, apiKeys, files, providerSettings, promptId, contextOptimization } = props;
+  const { messages, env: serverEnv, options, apiKeys, files, providerSettings, promptId, contextOptimization, enabledTools = ['aptos'] } = props;
 
   // console.log({serverEnv});
 
@@ -217,7 +218,7 @@ export async function streamText(props: {
       cwd: WORK_DIR,
       allowedHtmlElements: allowedHTMLElements,
       modificationTagName: MODIFICATIONS_TAG_NAME,
-    }) ?? getSystemPrompt();
+    }) ?? getSystemPrompt(WORK_DIR, enabledTools);
 
   if (files && contextOptimization) {
     const codeContext = createFilesContext(files);

@@ -31,6 +31,8 @@ import { LLMManager } from '~/lib/modules/llm/manager';
 import { AgentStore } from './AgentStore';
 import { useStore } from '@nanostores/react';
 import { agentsStore, saveAgent, deleteAgent } from '~/lib/stores/agents';
+import { enabledToolsStore, toggleTool } from '~/lib/stores/tools';
+import { AVAILABLE_TOOLS } from '~/lib/tools/registry';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -109,7 +111,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [isModelLoading, setIsModelLoading] = useState<string | undefined>('all');
     const [selectedSDK, setSelectedSDK] = useState('Vercel'); // State for selected SDK
     const [isAgentStoreOpen, setIsAgentStoreOpen] = useState(false);
+    const [showToolsDropdown, setShowToolsDropdown] = useState(false);
     const agents = useStore(agentsStore);
+    const enabledTools = useStore(enabledToolsStore);
 
     const getProviderSettings = useCallback(() => {
       let providerSettings: Record<string, IProviderSetting> | undefined = undefined;
@@ -136,6 +140,20 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     useEffect(() => {
       console.log(transcript);
     }, [transcript]);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (showToolsDropdown) {
+          const target = event.target as HTMLElement;
+          if (!target.closest('.tools-dropdown-container')) {
+            setShowToolsDropdown(false);
+          }
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showToolsDropdown]);
 
     useEffect(() => {
       if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -664,11 +682,73 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                               {/* Add more options for other SDKs as needed */}
                             </select>
                           </div>
-                          <div className="flex flex-col gap-1 w-[90px] sm:w-auto">
+                          <div className="flex flex-col gap-1 w-[90px] sm:w-auto relative tools-dropdown-container">
                             <span className="text-xs text-gray-500">Add Tools</span>
-                            <button className="px-3 py-2 rounded-md border-2 border-gray-500 text-xs w-full text-black">
+                            <button 
+                              onClick={() => setShowToolsDropdown(!showToolsDropdown)}
+                              className="px-3 py-2 rounded-md border-2 border-gray-500 text-xs w-full text-black hover:bg-gray-100 transition-colors"
+                            >
                               +
                             </button>
+                            {showToolsDropdown && (
+                              <div className="absolute top-full mt-1 z-50 bg-white border-2 border-gray-300 rounded-md shadow-lg min-w-[250px] max-h-[400px] overflow-y-auto">
+                                <div className="p-2">
+                                  <div className="text-xs font-semibold text-gray-700 mb-2 px-2">Available Tools</div>
+                                  {AVAILABLE_TOOLS.map((tool) => {
+                                    const isEnabled = enabledTools.includes(tool.id);
+                                    const isAlwaysEnabled = tool.alwaysEnabled || tool.id === 'aptos';
+                                    const isComingSoon = tool.comingSoon;
+                                    
+                                    return (
+                                      <div
+                                        key={tool.id}
+                                        className={`flex items-center gap-2 p-2 rounded ${
+                                          isComingSoon 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : isAlwaysEnabled 
+                                            ? 'bg-green-50 cursor-default' 
+                                            : 'hover:bg-gray-100 cursor-pointer'
+                                        }`}
+                                        onClick={() => {
+                                          if (!isComingSoon && !isAlwaysEnabled) {
+                                            toggleTool(tool.id);
+                                          }
+                                        }}
+                                      >
+                                        <div className="text-lg">{tool.icon}</div>
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-xs font-medium text-black">{tool.name}</div>
+                                            {isComingSoon && (
+                                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded-full font-medium">
+                                                Coming Soon
+                                              </span>
+                                            )}
+                                            {isAlwaysEnabled && !isComingSoon && (
+                                              <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
+                                                Always On
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="text-xs text-gray-600">{tool.description}</div>
+                                        </div>
+                                        {!isComingSoon && (
+                                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                            isEnabled ? 'bg-green-500 border-green-500' : 'border-gray-400'
+                                          }`}>
+                                            {isEnabled && (
+                                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                              </svg>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                         {/* Removed the Templates section */}

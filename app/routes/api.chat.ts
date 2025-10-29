@@ -32,11 +32,12 @@ function parseCookies(cookieHeader: string): Record<string, string> {
 }
 
 async function chatAction({ context, request }: ActionFunctionArgs) {
-  const { messages, files, promptId, contextOptimization } = await request.json<{
+  const { messages, files, promptId, contextOptimization, enabledTools } = await request.json<{
     messages: Messages;
     files: any;
     promptId?: string;
     contextOptimization: boolean;
+    enabledTools?: string[];
   }>();
 
   const cookieHeader = request.headers.get('Cookie');
@@ -115,6 +116,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
           providerSettings,
           promptId,
           contextOptimization,
+          enabledTools,
         });
 
         stream.switchSource(result.toDataStream());
@@ -134,6 +136,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
       providerSettings,
       promptId,
       contextOptimization,
+      enabledTools,
     });
 
     (async () => {

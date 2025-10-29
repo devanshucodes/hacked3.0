@@ -12,13 +12,14 @@ import DebugTab from './debug/DebugTab';
 import EventLogsTab from './event-logs/EventLogsTab';
 import ConnectionsTab from './connections/ConnectionsTab';
 import DataTab from './data/DataTab';
+import { ToolsTab } from './tools/ToolsTab';
 
 interface SettingsProps {
   open: boolean;
   onClose: () => void;
 }
 
-type TabType = 'data' | 'providers' | 'features' | 'debug' | 'event-logs' | 'connection';
+type TabType = 'data' | 'providers' | 'tools' | 'features' | 'debug' | 'event-logs' | 'connection';
 
 export const SettingsWindow = ({ open, onClose }: SettingsProps) => {
   const { debug, eventLogs } = useSettings();
@@ -27,6 +28,7 @@ export const SettingsWindow = ({ open, onClose }: SettingsProps) => {
   const tabs: { id: TabType; label: string; icon: string; component?: ReactElement }[] = [
     { id: 'data', label: 'Data', icon: 'i-ph:database', component: <DataTab /> },
     { id: 'providers', label: 'Providers', icon: 'i-ph:key', component: <ProvidersTab /> },
+    { id: 'tools', label: 'Tools', icon: 'i-ph:toolbox', component: <ToolsTab /> },
     { id: 'connection', label: 'Connection', icon: 'i-ph:link', component: <ConnectionsTab /> },
     { id: 'features', label: 'Features', icon: 'i-ph:star', component: <FeaturesTab /> },
     ...(debug

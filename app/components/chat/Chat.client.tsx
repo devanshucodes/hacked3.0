@@ -12,6 +12,7 @@ import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll } from
 import { description, useChatHistory } from '~/lib/persistence';
 import { chatStore } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
+import { enabledToolsStore } from '~/lib/stores/tools';
 import { DEFAULT_MODEL, DEFAULT_PROVIDER, PROMPT_COOKIE_KEY, PROVIDER_LIST } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger, renderLogger } from '~/utils/logger';
@@ -121,6 +122,7 @@ export const ChatImpl = memo(
     const files = useStore(workbenchStore.files);
     const actionAlert = useStore(workbenchStore.alert);
     const { activeProviders, promptId, autoSelectTemplate, contextOptimizationEnabled } = useSettings();
+    const enabledTools = useStore(enabledToolsStore);
 
     const [model, setModel] = useState(() => {
       const savedModel = Cookies.get('selectedModel');
@@ -145,6 +147,7 @@ export const ChatImpl = memo(
           files,
           promptId,
           contextOptimization: contextOptimizationEnabled,
+          enabledTools,
         },
         sendExtraMessageFields: true,
         onError: (e) => {
